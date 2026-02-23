@@ -8,7 +8,12 @@ from telegram.ext import (
     CallbackQueryHandler,
     ContextTypes,
 )
+from threading import Thread
+from flask import Flask
 
+# ===============================
+# LOAD ENV
+# ===============================
 load_dotenv()
 
 logging.basicConfig(
@@ -25,8 +30,22 @@ CHANNELS = [
     {"username": "@LunaaAirDrop", "link": "https://t.me/LunaaAirDrop"},
     {"username": "@gamegilacuan", "link": "https://t.me/gamegilacuan"},
     {"username": "@gamecuanngila", "link": "https://t.me/gamecuanngila"},
-    {"username": "@gamegilacuan", "link": "https://t.me/gamegilacuan"},
+    {"username": "@Rebahanajadapatcuangratis", "link": "https://t.me/Rebahanajadapatcuangratis"},
 ]
+
+# ===============================
+# WEB SERVER FLASK (KEEP ALIVE RENDER)
+# ===============================
+app_flask = Flask("")
+
+@app_flask.route("/")
+def home():
+    return "Bot is alive!"
+
+def run_flask():
+    app_flask.run(host="0.0.0.0", port=8080)
+
+Thread(target=run_flask).start()
 
 # ===============================
 # MENU UTAMA
@@ -47,7 +66,6 @@ def get_main_menu_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
 # ===============================
 # KEYBOARD JOIN (4 KOTAK)
 # ===============================
@@ -67,14 +85,12 @@ def get_join_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
-
 # ===============================
 # CEK APAKAH SUDAH JOIN
 # ===============================
 async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     try:
-        # User harus join semua channel
         for ch in CHANNELS:
             member = await context.bot.get_chat_member(ch["username"], user_id)
             if member.status not in ["member", "administrator", "creator"]:
@@ -82,7 +98,6 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return True
     except:
         return False
-
 
 # ===============================
 # START COMMAND
@@ -110,7 +125,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=get_main_menu_keyboard(),
         parse_mode="HTML"
     )
-
 
 # ===============================
 # HANDLE BUTTON
@@ -164,7 +178,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text,
         reply_markup=get_main_menu_keyboard()
     )
-
 
 # ===============================
 # MAIN
