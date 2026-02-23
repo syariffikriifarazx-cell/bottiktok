@@ -1,7 +1,6 @@
 import os
 import logging
 from dotenv import load_dotenv
-from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -48,6 +47,7 @@ def get_main_menu_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 # ===============================
 # KEYBOARD JOIN (4 KOTAK)
 # ===============================
@@ -67,12 +67,14 @@ def get_join_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard)
 
+
 # ===============================
 # CEK APAKAH SUDAH JOIN
 # ===============================
 async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     try:
+        # User harus join semua channel
         for ch in CHANNELS:
             member = await context.bot.get_chat_member(ch["username"], user_id)
             if member.status not in ["member", "administrator", "creator"]:
@@ -80,6 +82,7 @@ async def is_user_joined(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return True
     except:
         return False
+
 
 # ===============================
 # START COMMAND
@@ -107,6 +110,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=get_main_menu_keyboard(),
         parse_mode="HTML"
     )
+
 
 # ===============================
 # HANDLE BUTTON
@@ -161,14 +165,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=get_main_menu_keyboard()
     )
 
-# ===============================
-# FLASK PING SERVER (24/7)
-# ===============================
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Bot hidup bro! 🚀"
 
 # ===============================
 # MAIN
@@ -178,18 +174,14 @@ def main():
         print("TOKEN belum diisi di file .env!")
         return
 
-    telegram_app = Application.builder().token(BOT_TOKEN).build()
-    telegram_app.add_handler(CommandHandler("start", start))
-    telegram_app.add_handler(CallbackQueryHandler(handle_button))
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(handle_button))
 
     print("Bot aktif bro 🚀")
+    app.run_polling()
 
-    # Jalankan Telegram bot di background
-    import threading
-    threading.Thread(target=lambda: telegram_app.run_polling(), daemon=True).start()
-
-    # Jalankan Flask server di main thread
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
     main()
