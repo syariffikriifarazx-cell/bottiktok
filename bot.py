@@ -1,6 +1,7 @@
 import os
 import logging
 from dotenv import load_dotenv
+from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     Application,
@@ -8,12 +9,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     ContextTypes,
 )
-from threading import Thread
-from flask import Flask
 
-# ===============================
-# LOAD ENV
-# ===============================
 load_dotenv()
 
 logging.basicConfig(
@@ -32,20 +28,6 @@ CHANNELS = [
     {"username": "@gamecuanngila", "link": "https://t.me/gamecuanngila"},
     {"username": "@Rebahanajadapatcuangratis", "link": "https://t.me/Rebahanajadapatcuangratis"},
 ]
-
-# ===============================
-# WEB SERVER FLASK (KEEP ALIVE RENDER)
-# ===============================
-app_flask = Flask("")
-
-@app_flask.route("/")
-def home():
-    return "Bot is alive!"
-
-def run_flask():
-    app_flask.run(host="0.0.0.0", port=8080)
-
-Thread(target=run_flask).start()
 
 # ===============================
 # MENU UTAMA
@@ -180,6 +162,15 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # ===============================
+# FLASK PING SERVER (24/7)
+# ===============================
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Bot hidup bro! 🚀"
+
+# ===============================
 # MAIN
 # ===============================
 def main():
@@ -187,14 +178,18 @@ def main():
         print("TOKEN belum diisi di file .env!")
         return
 
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(handle_button))
+    telegram_app = Application.builder().token(BOT_TOKEN).build()
+    telegram_app.add_handler(CommandHandler("start", start))
+    telegram_app.add_handler(CallbackQueryHandler(handle_button))
 
     print("Bot aktif bro 🚀")
-    app.run_polling()
 
+    # Jalankan Telegram bot di background
+    import threading
+    threading.Thread(target=lambda: telegram_app.run_polling(), daemon=True).start()
+
+    # Jalankan Flask server di main thread
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 if __name__ == "__main__":
     main()
